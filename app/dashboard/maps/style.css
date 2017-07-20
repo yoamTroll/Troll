@@ -1,0 +1,13 @@
+
+  .infoWindowContent {
+    display:block;
+    position:absolute;
+    top:2em; left:2em; width:15em;
+    border:1px solid #758;
+    background-color:#FFF;
+    color:#758;
+    text-align: justify;
+    font-weight:none;
+    padding:5px;
+  }
+

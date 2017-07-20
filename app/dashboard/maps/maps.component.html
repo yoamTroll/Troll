@@ -1,0 +1,172 @@
+<div class="mappy">
+
+	<div class="row">
+		<div class="col-md-2">
+			<div class="alert alert-info">
+				<button type="button" aria-hidden="true" class="close">×</button>
+				<span>1 seul champ peut-être renseigné .</span>
+			</div>
+            <td>
+				<div class="checkbox">
+                    <label>
+                        <input checked="" name="optionsCheckboxes" type="checkbox" (change)="toggleHeatmap()"><span class="checkbox-material"></span>
+                    </label>
+                </div>
+            </td>
+            <td style="padding-right: 10px">Magasins</td>
+            <td>
+				<div class="checkbox">
+                    <label>
+                        <input checked="" name="optionsCheckboxes" type="checkbox" (change)="toggleWarehouseMap()"><span class="checkbox-material"></span>
+                    </label>
+                </div>
+            </td>
+            <td>Entrepôts</td>
+			<div class="btn-group">
+			  <!-- <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			    Rechercher <span class="caret"></span>
+			</button> -->
+
+			<ul class="dropdown-menu" (click)="onClick($event.target)">
+				<li id="1"><a>SSCC</a></li>
+				<li id="2"><a>Localisation</a></li>
+				<li id="3"><a>Magasin</a></li>
+				<li id="4"><a>N° tournée</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="col-md-2">
+		<div class="form-group form-black label-floating is-empty">
+			<label class="control-label">SSCC</label>
+			<input  type="text" class="form-control" #searchFilter (keyup)="0" #box (keyup.enter)="onEnterSscc(box.value)">
+		</div>
+	</div>
+	<div class="col-md-2">
+		<div class="form-group form-black label-floating is-empty">
+			<label class="control-label">localisation</label>
+			<input id="adress" type="texte" class="form-control" placeholder="" >
+		</div>
+	</div>
+	<div class="col-md-2">
+		<div class="form-group form-black label-floating is-empty">
+			<label class="control-label">magasin</label>
+			<input type="email" class="form-control" #storeFilter (keyup)="0" #store (keyup.enter)="onEnterStore(store.value)">
+		</div>
+	</div>
+	<div class="col-md-2">
+		<div class="form-group form-black label-floating is-empty">
+			<label class="control-label">N° tournée</label>
+			<input type="email" class="form-control" #tourFilter (keyup)="0" #tour (keyup.enter)="onEnterTour(tour.value)">
+		</div>
+	</div>
+	<div class="col-md-2">
+		<button type="submit" class="btn btn-white btn-round btn-just-icon">
+			<i class="material-icons">search</i><div class="ripple-container"></div>
+		</button>
+	</div>
+</div>
+</div>
+<!-- map module -->
+
+<div id="map"></div>
+
+<div *ngIf="(devices && !stores)" id="details" class="spacer">
+	<div class="card">
+		<div class="card-header" data-background-color="red">
+			<h4 class="title">Détails</h4>
+			<p class="category">{{devices.length}} résultat(s) trouvé(s)</p>
+		</div>
+		<div  class="card-content table-responsive">
+			<table class="table table-hover">
+				<thead class="text-danger">
+					<tr>
+						<th>ID</th>
+						<th *ngIf="phenix_sscc">SSCC</th>
+						<th>Label</th>
+						<th *ngIf="phenix_data">Entrepôt</th>
+						<th *ngIf="phenix_data">Magasin</th>
+						<th *ngIf="phenix_data">Tournée</th>
+						<th>°C relevée</th>
+						<th>°C attendue</th>
+						<th>chocs</th>
+						<th *ngIf="phenix_data">date expédition</th>
+						<th *ngIf="phenix_data">date livraison attendue</th>
+						<th *ngIf="phenix_data">heure livraison estimée</th>
+						<th *ngIf="phenix_data">date retour attendue</th>
+						<th *ngIf="phenix_data">Alertes</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let device of devices|myfilter: searchFilter.value | tourFilter: tourFilter.value |paginate: {itemsPerPage: 5, currentPage:page, id: '1'}; let i = index">
+						<td>{{device.id}}</td>
+						<td *ngIf="phenix_sscc">{{device.status}}</td>
+						<td>{{device.label}}</td>
+						<td *ngIf="phenix_data">{{phenix_data?.whsEan}}</td>
+						<td *ngIf="phenix_data">{{phenix_data?.delSiteDesc}}</td>
+						<td *ngIf="phenix_data">{{phenix_data?.tourOpCode}}</td>
+						<td>{{device.data.temperature}}</td>
+						<td></td>
+						<td></td>
+						<td *ngIf="phenix_data">{{phenix_data?.shippingDatetime}}</td>
+						<td *ngIf="phenix_data">{{phenix_data?.delDatetime}}</td>
+						<td *ngIf="phenix_data"></td>
+						<td *ngIf="phenix_data"></td>
+						<td *ngIf="phenix_data"><a type="button" href="#alerts" class="btn btn-default">Alertes</a></td>
+					</tr>
+				</tbody>
+			</table>
+			<pagination-controls (pageChange)="page = $event" id="1" maxSize="5" directionLinks="true" autoHide="true"></pagination-controls>
+		</div>
+	</div>
+</div>
+
+
+<div *ngIf="stores" class="spacer">
+	<div class="card">
+		<div class="card-header" data-background-color="red">
+			<h4 class="title">Détails de votre recherche</h4>
+			<p class="category">{{stores.length}} résultat(s) trouvé(s)</p>
+		</div>
+		<div  class="card-content table-responsive">
+			<table class="table table-hover">
+				<thead class="text-danger">
+					<tr>
+						<th>ID</th>
+						<th>SSCC</th>
+						<th>label</th>
+						<th>Entrepôt</th>
+						<th>Magasin</th>
+						<th>Tournée</th>
+						<th>°C relevée</th>
+						<th>°C attendue</th>
+						<th>chocs</th>
+						<th>date expédition</th>
+						<th>date livraison attendue</th>
+						<th>heure livraison estimée</th>
+						<th>date retour attendue</th>
+						<th>Alertes</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let store of stores|paginate: {itemsPerPage: 5, currentPage:page, id: '2'}; let i = index">
+						<td>{{store[0]}}</td>
+						<td>{{store[1]}}</td>
+						<td>{{store.label}}</td>
+						<td>{{store[3]}}</td>
+						<td>{{store[4]}}</td>
+						<td>{{store[5]}}</td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td>{{store[6]}}</td>
+						<td>{{store[7]}}</td>
+						<td></td>
+						<td></td>
+						<td><a type="button" (click)="localiser(store[0])" class="btn btn-default">Localiser</a></td>
+					</tr>
+				</tbody>
+			</table>
+			<pagination-controls (pageChange)="page = $event" id="2" maxSize="5" directionLinks="true" autoHide="true"></pagination-controls>
+		</div>
+	</div>
+</div>

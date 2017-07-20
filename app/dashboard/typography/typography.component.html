@@ -1,0 +1,48 @@
+<!-- <div class="main-content">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</div> -->
+<!-- <head>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" rel="stylesheet" media="all" type="text/css"> 
+<link href="//code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" media="all" type="text/css"> 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"> </script>
+<script>
+ $(function() {
+$( "#date" ).datepicker();
+});
+</script>
+</head> -->
+
+<div class="mappy">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="form-group form-black label-floating is-empty">
+                <label class="control-label">SSCC</label>
+                <input  type="text" class="form-control" (keyup)="0" #box (keyup.enter)="onEnterSscc(box.value)">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group form-black label-floating is-empty">
+                <label class="control-label">N° tournée</label>
+                <input type="email" class="form-control" #tourFilter (keyup)="0" #tour (keyup.enter)="onEnterTour(tour.value)">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group form-black label-floating is-empty">
+                <label class="control-label">Date</label>
+                <input type="date" class="form-control" (keyup)="0" #date (keyup.enter)="onEnterDate(date.value)">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="map"></div>

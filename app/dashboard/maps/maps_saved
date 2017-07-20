@@ -1,0 +1,158 @@
+import { Component,OnInit, NgZone, NgModule, ElementRef, ViewChild } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { AgmCoreModule, MapsAPILoader } from 'angular2-google-maps/core';
+import { BrowserModule } from "@angular/platform-browser";
+
+
+import { SensorsService } from './sensors.service';
+import { Sensor } from './sensor';
+
+
+declare var google: any;
+
+@Component({
+    moduleId: module.id,
+    selector: 'maps-cmp',
+    templateUrl: 'maps.component.html',
+    styles: [`
+    .mappy {
+      margin-top:90px; 
+      margin-left: 35px;
+    }`],
+    providers: [MapsAPILoader, SensorsService],
+    imports: [ 
+    AgmCoreModule.forRoot({
+      libraries: ["places"]
+    })]
+})
+
+export class MapsComponent implements OnInit {
+    public latitude: number;
+    public longitude: number;
+    public searchControl: FormControl;
+    public zoom: number;
+    public sensors: Sensor[];
+
+    @ViewChild("adress")
+    public searchElementRef: ElementRef;
+
+    constructor(
+      private mapsAPILoader: MapsAPILoader,
+      private ngZone: NgZone,
+      private sensorsService: SensorsService
+    ) {}
+
+    /**
+    * getSensors retrieves sensors data
+    * and add markers on the map for each sensor
+    * @param map
+    * @returns void
+    */
+    getSensors(map): void {
+      this.sensorsService.getSensors().then((sensors) => {
+        // now sensors data is avalaible
+        this.sensors = sensors;
+        // window's creation
+        var infoWindow = new google.maps.InfoWindow();
+        for (var sensor in this.sensors) {
+          infoWindow = this.setMarker(this.sensors[sensor].id, this.sensors[sensor].latitude, 
+            this.sensors[sensor].longitude, map, infoWindow);
+        }
+        //
+      }, (error) => {
+        // FAILURE
+        console.log(`ERROR : getSensors() in maps.component.ts, unable to
+          reach sensors data` + error);
+      });
+    }
+
+    /**
+    * setMarker add markers with some information on the
+    * google map
+    * @param id sensor's identifier
+    * @param latitude sensor's latitude
+    * @param longitude sensor's longitude
+    * @param map google maps
+    * @param infoWindow 
+    * @returns InfoWindow
+    */
+    setMarker(id, latitude, longitude, map, infoWindow): InfoWindow {
+      var latLng = new google.maps.LatLng(latitude, longitude);
+      var marker =  new google.maps.Marker({
+        position: latLng,
+        map: map,
+        title: 'sensor_'+id
+      });
+      // To add the marker to the map, call setMap();
+      marker.setMap(map);
+
+      // window's options
+      var contentString = "<h3>"+marker.title+"</h3>"
+      // display window on the user's click
+      google.maps.event.addListener(marker, 'click', function() {
+        //close infoWindow when another marker is clicked
+        infoWindow.close();
+        //update the info window
+        infoWindow.setContent(contentString);
+        infoWindow.open(map,marker);
+      });
+      return infoWindow;
+    }
+
+    ngOnInit() {
+      //set google maps defaults
+      this.zoom = 13;
+      this.latitude = 48.856638;
+      this.longitude = 2.352241;
+
+
+      //create search FormControl
+      this.searchControl = new FormControl();
+
+      var myLatlng = new google.maps.LatLng(this.latitude, this.longitude);
+      var mapOptions = {
+        zoom: this.zoom,
+        center: myLatlng,
+        scrollwheel: false, //we disable de scroll over the map, it is a really annoing when you scroll through page
+        styles: [{"featureType":"water","stylers":[{"saturation":43},{"lightness":-11},{"hue":"#0088ff"}]},{"featureType":"road","elementType":"geometry.fill","stylers":[{"hue":"#ff0000"},{"saturation":-100},{"lightness":99}]},{"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#808080"},{"lightness":54}]},{"featureType":"landscape.man_made","elementType":"geometry.fill","stylers":[{"color":"#ece2d9"}]},{"featureType":"poi.park","elementType":"geometry.fill","stylers":[{"color":"#ccdca1"}]},{"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#767676"}]},{"featureType":"road","elementType":"labels.text.stroke","stylers":[{"color":"#ffffff"}]},{"featureType":"poi","stylers":[{"visibility":"off"}]},{"featureType":"landscape.natural","elementType":"geometry.fill","stylers":[{"visibility":"on"},{"color":"#b8cb93"}]},{"featureType":"poi.park","stylers":[{"visibility":"on"}]},{"featureType":"poi.sports_complex","stylers":[{"visibility":"on"}]},{"featureType":"poi.medical","stylers":[{"visibility":"on"}]},{"featureType":"poi.business","stylers":[{"visibility":"simplified"}]}]
+      }
+
+      var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+      // get back sensors data
+      this.getSensors(map);
+
+      //To add autocomplete to the search box
+      var input = /** @type {!HTMLInputElement} */(
+        document.getElementById('adress'));
+      google.maps.event.addDomListener(input, 'keydown', function(e) { 
+        if (e.keyCode == 13) { 
+          console.log('hello');
+        }
+      });
+      var search_options = {
+        types: ['(cities)'],
+        componentRestrictions: {country: 'fr'}
+      }; 
+      var autocomplete = new google.maps.places.Autocomplete(input, search_options);
+      autocomplete.addListener("place_changed", () => {
+        this.ngZone.run(() => {
+          //get the place result
+          let place: google.maps.places.PlaceResult = autocomplete.getPlace();
+
+          //verify result
+          if (place.geometry === undefined || place.geometry === null) {
+            return;
+          }
+          if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+          } else {
+            //set latitude, longitude and zoom
+            this.latitude = place.geometry.location.lat();
+            this.longitude = place.geometry.location.lng();
+            this.zoom = 12;
+            map.setCenter(place.geometry.location);
+          }
+        });
+      });
+    }
+  }
